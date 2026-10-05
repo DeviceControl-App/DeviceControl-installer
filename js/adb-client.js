@@ -1,4 +1,4 @@
-import { appState } from './state.js';
+import { appState, restoreSessionState } from './state.js';
 import { log, showToast, updateStatusBadge } from './ui.js';
 import { ADB_ERRORS } from './config.js';
 

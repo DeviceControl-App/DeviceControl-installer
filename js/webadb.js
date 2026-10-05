@@ -110,9 +110,18 @@
 
 	Adb.WebUSB.Transport.prototype.getDevice = function(filter) {
 		let match = this.find(filter);
-		return this.device.selectConfiguration(match.conf.configurationValue)
+		if (!match) return Promise.reject(new Error("Adb interface not found"));
+		let promise = Promise.resolve();
+		if (!this.device.configuration || this.device.configuration.configurationValue !== match.conf.configurationValue) {
+			promise = promise.then(() => this.device.selectConfiguration(match.conf.configurationValue));
+		}
+		return promise
 			.then(() => this.device.claimInterface(match.intf.interfaceNumber))
-			.then(() => this.device.selectAlternateInterface(match.intf.interfaceNumber, match.alt.alternateSetting))
+			.then(() => {
+				if (match.alt.alternateSetting !== 0) {
+					return this.device.selectAlternateInterface(match.intf.interfaceNumber, match.alt.alternateSetting);
+				}
+			})
 			.then(() => match);
 	};
 
@@ -179,9 +188,7 @@
 
 		this.ep_in = get_ep_num(match.alt.endpoints, "in");
 		this.ep_out = get_ep_num(match.alt.endpoints, "out");
-
-		this.transport.reset();
-	}
+	};
 
 	Adb.WebUSB.Device.prototype.open = function(service) {
 		return Adb.Stream.open(this, service);
@@ -307,7 +314,7 @@
 
 		let seq = device.send(header);
 		if (len > 0)
-			seq.then(() => device.send(data));
+			seq = seq.then(() => device.send(data));
 		return seq;
 	};
 
