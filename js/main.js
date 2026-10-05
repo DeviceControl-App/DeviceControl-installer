@@ -2,7 +2,7 @@
 import { navigateTo, toggleVideo, log, showToast, copyLogToClipboard } from './ui.js';
 import { connectAdb } from './adb-client.js';
 import { checkAccounts, runAccountBypass } from './accounts.js';
-import { checkForUpdates, startDownload, runInstallation } from './installer.js';
+import { startDownload, runInstallation } from './installer.js';
 import { appState, restoreSessionState } from './state.js';
 
 // 1. ATTACH TO WINDOW IMMEDIATELY

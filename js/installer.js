@@ -5,43 +5,23 @@ import { log, showToast, updateProgress, navigateTo } from './ui.js';
 import { restoreAccounts } from './accounts.js';
 
 let apkBlob = null;
-let foundRelease = null;
-export async function checkForUpdates() {
-    const infoText = document.getElementById('update-info-text');
-    const btn = document.getElementById('btn-download');
-
-    try {
-        const resp = await fetch(CONFIG.REMOTE_APK_URL, { method: "HEAD" });
-
-        if (!resp.ok) throw new Error("APK not found");
-
-        foundRelease = {
-            url: CONFIG.REMOTE_APK_URL,
-            size: resp.headers.get("Content-Length")
-        };
-
-        infoText.innerHTML = `נמצא APK בשרת`;
-        btn.disabled = false;
-
-    } catch (e) {
-        infoText.innerText = "משתמש ב־APK מקומי";
-        foundRelease = null;
-        btn.disabled = true;
-    }
-}
 
 export async function startDownload() {
-    if (!foundRelease) return;
-
     const btn = document.getElementById('btn-download');
     const bar = document.getElementById('dl-progress-bar');
+    const infoText = document.getElementById('update-info-text');
+    const statusText = document.getElementById('dl-status-text');
 
-    btn.disabled = true;
+    if (btn) btn.style.display = 'none';
+    if (bar) bar.style.width = '0%';
+    if (statusText) statusText.innerText = 'מתחבר לשרת...';
+    if (infoText) infoText.innerText = 'מוריד את קובץ ה-APK העדכני...';
+
     document.getElementById('dl-progress-wrapper').style.display = 'block';
 
     try {
-        const resp = await fetch(foundRelease.url);
-        if (!resp.ok) throw new Error("Download failed");
+        const resp = await fetch(CONFIG.REMOTE_APK_URL);
+        if (!resp.ok) throw new Error(`קוד שגיאה: ${resp.status} (${resp.statusText})`);
 
         const reader = resp.body.getReader();
         const len = +resp.headers.get('Content-Length');
@@ -55,19 +35,31 @@ export async function startDownload() {
             chunks.push(value);
             received += value.length;
 
-            if (len) {
-                bar.style.width = Math.round((received / len) * 100) + "%";
+            if (len && bar) {
+                const pct = Math.round((received / len) * 100);
+                bar.style.width = pct + "%";
+                if (statusText) statusText.innerText = `${pct}% (${(received / (1024 * 1024)).toFixed(1)}MB / ${(len / (1024 * 1024)).toFixed(1)}MB)`;
+            } else if (statusText) {
+                statusText.innerText = `${(received / (1024 * 1024)).toFixed(1)}MB`;
             }
         }
 
         apkBlob = new Blob(chunks, { type: "application/vnd.android.package-archive" });
         appState.apkDownloaded = true;
 
+        if (statusText) statusText.innerText = 'ההורדה הושלמה בהצלחה!';
+        if (infoText) infoText.innerText = 'קובץ ה-APK הורד בהצלחה. עובר להתקנה...';
+
         setTimeout(() => navigateTo('page-install', 4), 1000);
 
     } catch (e) {
-        showToast("שגיאה בהורדה – משתמש ב־APK מקומי");
-        btn.disabled = false;
+        showToast("שגיאה בהורדת ה-APK: " + e.message);
+        if (statusText) statusText.innerText = "ההורדה נכשלה";
+        if (infoText) infoText.innerText = "שגיאה בהורדת ה-APK משרת GitHub: " + e.message;
+        if (btn) {
+            btn.style.display = 'inline-flex';
+            btn.disabled = false;
+        }
         apkBlob = null;
     }
 }
@@ -99,11 +91,11 @@ export async function runInstallation() {
             console.warn("Dumpsys device_policy check skipped or clean:", e);
         }
         
-        // Load APK
+        // Ensure APK is loaded from remote URL
         if (!apkBlob) {
-            log("טוען APK מקומי...", 'info');
-            const resp = await fetch(CONFIG.APK_LOCAL_PATH);
-            if (!resp.ok) throw new Error("APK מקומי חסר");
+            log("מוריד APK מהשרת...", 'info');
+            const resp = await fetch(CONFIG.REMOTE_APK_URL);
+            if (!resp.ok) throw new Error("שגיאה בהורדת ה-APK משרת GitHub (" + resp.status + ")");
             apkBlob = await resp.blob();
         }
 

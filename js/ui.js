@@ -90,6 +90,7 @@ export function navigateTo(pageId, stepIndex) {
 
     // Auto-run actions
     if (pageId === 'page-accounts' && window.checkAccounts) window.checkAccounts();
+    if (pageId === 'page-update' && window.startDownload) setTimeout(window.startDownload, 300);
     if (pageId === 'page-install' && window.runInstallation) setTimeout(window.runInstallation, 600);
 }
 

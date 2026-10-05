@@ -2,8 +2,7 @@ export const CONFIG = {
     ENABLE_WEB_UPDATE: true,
     REMOTE_APK_URL: "https://devicecontrol-app.github.io/files/DeviceControl.apk",
     TARGET_PACKAGE: "aiv.diy.control",
-    DEVICE_ADMIN: ".DeviceOwnerReceiver",
-    APK_LOCAL_PATH: "apk/DeviceControl.apk"
+    DEVICE_ADMIN: ".DeviceOwnerReceiver"
 };
 
 // Packages that must NEVER be disabled

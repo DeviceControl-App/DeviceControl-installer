@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.github.com; object-src 'none';">
     <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://gc.zgo.at;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
-    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
-    img-src 'self' data: https://placehold.co https://raw.githubusercontent.com;
-">
+        default-src 'self';
+        connect-src 'self' https://devicecontrol-app.github.io https://*.github.io https://api.github.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://gc.zgo.at;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' data: https://placehold.co https://raw.githubusercontent.com;
+        media-src 'self' blob:;
+        object-src 'none';
+    ">
     
     <title>מתקין DeviceControl</title>
     
@@ -152,23 +154,22 @@
 
             <!-- PAGE 3: Update -->
             <div id="page-update" class="page">
-                <h2>עדכון גרסה</h2>
+                <h2>הורדת גרסה</h2>
                 <div class="info-card">
                     <span class="material-symbols-rounded">cloud_download</span>
-                    <div id="update-info-text">יוצר קשר עם שרתי GitHub...</div>
+                    <div id="update-info-text">מוריד את גרסת DeviceControl העדכנית ביותר...</div>
                 </div>
 
                 <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <h3 id="dl-status-text" style="font-weight: 300; margin: 0;"></h3>
-                    <div class="progress-wrapper" id="dl-progress-wrapper">
+                    <h3 id="dl-status-text" style="font-weight: 300; margin: 0; margin-bottom: 15px;">מתחיל בהורדה...</h3>
+                    <div class="progress-wrapper" id="dl-progress-wrapper" style="display: block;">
                         <div class="progress-fill" id="dl-progress-bar"></div>
                     </div>
                 </div>
 
-                <div class="action-area">
-                    <button class="btn btn-tonal" onclick="navigateTo('page-install', 4)">דלג והשתמש בגרסה קיימת</button>
-                    <button id="btn-download" class="btn" onclick="startDownload()" disabled>
-                        <span class="material-symbols-rounded">download</span> הורד ועדכן
+                <div class="action-area" style="justify-content: flex-end;">
+                    <button id="btn-download" class="btn" onclick="startDownload()" style="display: none;">
+                        <span class="material-symbols-rounded">refresh</span> נסה שוב
                     </button>
                 </div>
             </div>
