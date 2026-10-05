@@ -1,6 +1,6 @@
 import { appState } from './state.js';
 import { CONFIG } from './config.js';
-import { executeAdbCommand, wait } from './adb-client.js';
+import { executeAdbCommand, wait, readAll } from './adb-client.js';
 import { log, showToast, updateProgress, navigateTo } from './ui.js';
 import { restoreAccounts } from './accounts.js';
 
@@ -84,9 +84,20 @@ export async function runInstallation() {
     document.getElementById('phone-success-message').style.display = 'flex';
 
     try {
-        // Pre-checks
-        const owner = await executeAdbCommand("dpm get-device-owner", "Check Owner", true);
-        if (owner.includes("ComponentInfo") && !owner.includes(CONFIG.TARGET_PACKAGE)) throw new Error("קיים ניהול אחר");
+        // Pre-checks: check if another device owner is already configured
+        try {
+            const shell = await appState.adbInstance.shell("dumpsys device_policy");
+            const policy = await readAll(shell);
+            if (policy.includes("Device Owner:") || policy.includes("Device Owner (User 0):")) {
+                const ownerSection = policy.split(/Device Owner.*?:/i)[1]?.split(/Profile Owner|User \d+:|\n\s*\n/)[0] || "";
+                if (ownerSection.includes("admin=ComponentInfo") && !ownerSection.includes(CONFIG.TARGET_PACKAGE)) {
+                    throw new Error("קיים ניהול אחר (Device Owner) על המכשיר. יש לבצע איפוס יצרן.");
+                }
+            }
+        } catch (e) {
+            if (e.message.includes("קיים ניהול אחר")) throw e;
+            console.warn("Dumpsys device_policy check skipped or clean:", e);
+        }
         
         // Load APK
         if (!apkBlob) {
